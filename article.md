@@ -8,11 +8,11 @@ let (feature_values, _) = features
         .unwrap();
 ```
 
-This single line of code recently made unavailable a significant portion of the Internet throughout the world. Yes, I am talking about the infamous Cloudflare outage of November 2025. A lot of fundamental services like X, Zoom, your favorite AI chats, and, the irony - Downdetector, were totally or partially unavailable. In Rust, unwrapping an error results in a panic, which is exactly what happened, causing the specific proxy service unavailability and therefore the aforementioned chaos.
+This single line of code recently made a significant portion of the Internet unavailable throughout the world. Yes, I am talking about the infamous Cloudflare outage of November 2025. A lot of fundamental services like X, Zoom, your favorite AI chats, and, the irony - Downdetector, were totally or partially unavailable. In Rust, unwrapping an error results in a panic, which is exactly what happened, causing the specific proxy service unavailability and therefore the aforementioned chaos.
 There are a lot of ways this problem could have been avoided, like making an optional service failure non-critical for the main service, but today I want to specifically inspect how different languages handle unexpected and erroneous situations like the one I've started the article with.
 
 ## Premise
-For every considered language, I am exploring the go-to approach to error handling, and then imagine the following situation: I am writing a web service that uses a 3rd party library that potentially could break in unexpected ways, and how can I, as a main and responsible developer, protect myself and my product.
+For every language considered, I am exploring the go-to approach to error handling, and then reason over the following situation: I am writing a web service that uses a 3rd party library that potentially could break in unexpected ways, and how can I, as a main and responsible developer, protect myself and my product.
 
 ## Rust
 The default approach in Rust - the Result type - is basically an [Either monad](https://www.sandromaglione.com/articles/either-error-handling-functional-programming). The idea of Either is that a value can be exact one of two types, in our case, it's either a normal, success-path value or an error. Processing a Result value is straightforward - we designate what we do in case of a normal value, and what we do in case of an error:
@@ -37,7 +37,7 @@ There is a method `std::panic::catch_unwind` that catches some panics and wraps 
 ```rust
 let result = panic::catch_unwind(|| {
     panic!("oh no!");
-)
+});
 ```
 
 This method catches only panics that are implemented via stack unwinding, so it doesn't work for
@@ -48,7 +48,7 @@ This method catches only panics that are implemented via stack unwinding, so it 
 And this method also doesn't catch direct terminations like `process::exit`.
 
 ## Go
-It may not look like this at first, but Go actually has a very similar approach to error handling:
+It may not look like it at first, but Go actually has a very similar approach to error handling:
 * there is a special `error` type which is an interface with a single method that returns a string. It could be passed around as any other object
 * there is a tuple construct, and any function can return a tuple of arbitrary values
 
@@ -177,7 +177,7 @@ originalExit.call(process, code); // when you really want to exit
 I won't go into details, C++ has exceptions similar to Java and Python as a main historical mechanism for error handling, but it also has a structure similar to Rust's Result type in the form of `std::expected` (since C++23). There are also forceful termination methods, some of which can be caught via global handlers, and some cannot.
 
 ## Summary
-From the catch and recovery standpoint, Javascript and Go seem to be the most permissible languages, with Go recovery function and Javascript monkey-patch whatever you want. I don't see obvious gaps in other languages though, so it all comes down to picking the right robust tools for the job. I would suggest scanning 3rd party libraries for any direct process termination calls if this is a critical requirement for your project.
+From the catch and recovery standpoint, Javascript and Go seem to be the most permissive languages, with Go's recovery function and Javascript's ability to monkey-patch whatever you want. I don't see obvious gaps in other languages though, so it all comes down to picking the right robust tools for the job. I would suggest scanning 3rd party libraries for any direct process termination calls if this is a critical requirement for your project.
 
 After thorough thinking, I still believe that careful architectural design is the best long-term failure tolerance strategy.
 If your service has a non-critical dependency that relies on external setup, make sure that failure of that dependency doesn't block or crash your main service.
