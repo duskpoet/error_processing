@@ -1,6 +1,6 @@
 # Imprisoning the Panic
 
-![bug in a cage](./bug.jpg)
+![bug in a cage](./bugs.jpg)
 
 ```rust
 let (feature_values, _) = features
